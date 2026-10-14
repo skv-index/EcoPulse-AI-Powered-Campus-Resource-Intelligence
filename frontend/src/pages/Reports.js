@@ -1,7 +1,7 @@
 ﻿import { useMemo } from "react";
 import api from "../services/api";
 import useFetch from "../hooks/useFetch";
-import { sampleSummary, sampleCostEstimates, sampleAnomalies, sampleIssues } from "../utils/sampleData";
+import { sampleSummary, sampleCostEstimates, sampleIssues } from "../utils/sampleData";
 import { fmtNum } from "../utils/format";
 import KpiCard from "../components/KpiCard";
 import Chart from "../components/Chart";
@@ -24,27 +24,56 @@ function computeScore(o) {
   return Math.max(0, Math.round(100 - anomalyPenalty - issuePenalty - wastePenalty));
 }
 
-function toList(d, key) {
-  if (!d) return null;
-  if (Array.isArray(d)) return d;
-  return d[key] || d.items || d.data || null;
-}
-
 export default function Reports() {
   const sum = useFetch(() => api.get("/api/dashboard/summary"));
-  const cost = useFetch(() => api.ai.get("/api/cost-estimate"));
+  const ins = useFetch(() => api.ai.get("/api/ai/insights"));
   const demoMode = Boolean(sum.error);
 
-  const summary = sum.data && sum.data.trend ? sum.data : demoMode ? sampleSummary : sum.data;
-  const costs = toList(cost.data, "estimates") || sampleCostEstimates;
+  // Real shapes (null-safe):
+  // summary: { totals_30d, counts, issues_by_status, per_building }
+  // insights: { anomalies_count, totals, cost_estimate: { breakdown, total } }
+  const totals = (sum.data && sum.data.totals_30d) || null;
+  const counts = (sum.data && sum.data.counts) || null;
+  const insights = ins.data || null;
+
+  const summary = totals
+    ? {
+        totalConsumption: {
+          electricity: totals.electricity || 0,
+          water: totals.water || 0,
+          waste: totals.waste || 0,
+        },
+        anomaliesCount: insights && insights.anomalies_count !== undefined ? insights.anomalies_count : 0,
+        openIssues: counts ? counts.issues_open || 0 : 0,
+        totalIssues: counts ? counts.issues_total || 0 : 0,
+      }
+    : demoMode
+      ? {
+          totalConsumption: sampleSummary.totalConsumption,
+          anomaliesCount: sampleSummary.anomaliesCount,
+          openIssues: sampleIssues.filter((i) => i.status !== "resolved").length,
+          totalIssues: sampleIssues.length,
+        }
+      : null;
+
+  const costs =
+    (insights && insights.cost_estimate && insights.cost_estimate.breakdown
+      ? Object.keys(insights.cost_estimate.breakdown).map((rtype) => ({
+          resourceType: rtype,
+          usage: (insights.totals && insights.totals[rtype]) || 0,
+          cost: insights.cost_estimate.breakdown[rtype],
+          saving: Math.round(Number(insights.cost_estimate.breakdown[rtype] || 0) * 0.12),
+        }))
+      : null) || sampleCostEstimates;
 
   const score = useMemo(() => {
-    const t = (summary && summary.totalConsumption) || sampleSummary.totalConsumption;
-    const total = (t.electricity || 0) + (t.water || 0) * 10 + (t.gas || 0) * 5 + (t.waste || 0);
+    if (!summary) return 0;
+    const t = summary.totalConsumption;
+    const total = (t.electricity || 0) + (t.water || 0) + (t.waste || 0);
     return computeScore({
-      anomalies: (summary && summary.anomaliesCount) !== undefined ? summary.anomaliesCount : sampleAnomalies.length,
-      openIssues: sampleIssues.filter((i) => i.status !== "resolved").length,
-      totalIssues: sampleIssues.length,
+      anomalies: summary.anomaliesCount || 0,
+      openIssues: summary.openIssues || 0,
+      totalIssues: summary.totalIssues || 0,
       waste: t.waste || 0,
       total,
     });
@@ -82,7 +111,10 @@ export default function Reports() {
       </div>
 
       <div className="card">
-        <h3>Savings estimate {cost.error && <Badge tone="amber">SAMPLE</Badge>}</h3>
+        <h3>Savings estimate {ins.error && <Badge tone="amber">SAMPLE</Badge>}</h3>
+        {insights && insights.cost_estimate && insights.cost_estimate.note && (
+          <p className="muted">{insights.cost_estimate.note}</p>
+        )}
         <table className="table">
           <thead>
             <tr>

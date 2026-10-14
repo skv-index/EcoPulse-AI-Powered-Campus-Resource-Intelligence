@@ -10,16 +10,27 @@ import AlertBanner from "../components/AlertBanner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorState from "../components/ErrorState";
 
-function normalizeSummary(raw, demo) {
+import Chart from "../components/Chart";
+
+// Real backend shape: { totals_30d, per_building, counts, issues_by_status, window }.
+// View model used below: { totalConsumption, totalBuildings, activeIssues,
+// anomaliesCount, trend (optional), perBuilding }.
+function normalizeSummary(raw, demo, anomaliesCount) {
   if (!raw) return demo ? sampleSummary : null;
-  if (raw.trend) return raw;
+  if (raw.trend || raw.totalConsumption) return raw;
+  const totals = raw.totals_30d || {};
+  const counts = raw.counts || {};
   return {
-    totalConsumption: raw.totalConsumption || raw.totals || sampleSummary.totalConsumption,
-    totalBuildings: raw.totalBuildings !== undefined ? raw.totalBuildings : (raw.buildings || sampleSummary.totalBuildings),
-    activeIssues: raw.activeIssues !== undefined ? raw.activeIssues : (raw.openIssues || sampleSummary.activeIssues),
-    anomaliesCount: raw.anomaliesCount !== undefined ? raw.anomaliesCount : sampleSummary.anomaliesCount,
-    efficiencyScore: raw.efficiencyScore || sampleSummary.efficiencyScore,
-    trend: raw.trend || raw.consumptionTrend || sampleSummary.trend,
+    totalConsumption: {
+      electricity: totals.electricity || 0,
+      water: totals.water || 0,
+      waste: totals.waste || 0,
+    },
+    totalBuildings: counts.buildings !== undefined ? counts.buildings : sampleSummary.totalBuildings,
+    activeIssues: counts.issues_open !== undefined ? counts.issues_open : sampleSummary.activeIssues,
+    anomaliesCount: anomaliesCount !== undefined ? anomaliesCount : sampleSummary.anomaliesCount,
+    trend: raw.trend || null,
+    perBuilding: raw.per_building || [],
   };
 }
 
@@ -31,12 +42,16 @@ function toList(d, key) {
 
 export default function Dashboard() {
   const sum = useFetch(() => api.get("/api/dashboard/summary"));
-  const anom = useFetch(() => api.ai.get("/api/anomalies"));
+  const anom = useFetch(() => api.ai.get("/api/ai/anomalies"));
   const iss = useFetch(() => api.get("/api/issues"));
 
+  const anomList = toList(anom.data, "anomalies");
   const demoMode = Boolean(sum.error || anom.error);
-  const summary = useMemo(() => normalizeSummary(sum.data, demoMode), [sum.data, demoMode]);
-  const anomalies = toList(anom.data, "anomalies") || (demoMode ? sampleAnomalies : []);
+  const summary = useMemo(
+    () => normalizeSummary(sum.data, demoMode, anomList ? anomList.length : undefined),
+    [sum.data, demoMode, anomList ? anomList.length : 0]
+  );
+  const anomalies = anomList || (demoMode ? sampleAnomalies : []);
   const issues = toList(iss.data, "issues") || (demoMode ? sampleIssues : []);
 
   if (sum.loading && !sum.data) return <LoadingSpinner text="Loading campus summary..." />;
@@ -65,8 +80,23 @@ export default function Dashboard() {
 
           <div className="grid cards-2">
             <div className="card">
-              <h3>Consumption trend</h3>
-              <LineChart data={summary.trend} />
+              <h3>Consumption (last 30 days)</h3>
+              {summary.trend ? (
+                <LineChart data={summary.trend} />
+              ) : summary.perBuilding && summary.perBuilding.length ? (
+                <Chart
+                  kind="bar"
+                  data={summary.perBuilding}
+                  xKey="building_name"
+                  series={[
+                    { key: "electricity", name: "Electricity (kWh)", color: "#0d7a5f" },
+                    { key: "water", name: "Water (L)", color: "#0ea5a4" },
+                    { key: "waste", name: "Waste (kg)", color: "#b45309" },
+                  ]}
+                />
+              ) : (
+                <p className="muted">No consumption data yet.</p>
+              )}
             </div>
             <div className="card">
               <h3>Anomaly alerts {demoMode && <Badge tone="amber">SAMPLE</Badge>}</h3>
@@ -79,9 +109,10 @@ export default function Dashboard() {
                       <Badge tone={a.severity === "high" ? "red" : a.severity === "medium" ? "amber" : "gray"}>
                         {a.severity || "info"}
                       </Badge>{" "}
-                      <strong>{a.building || a.buildingName}</strong> · {a.resourceType} —{" "}
-                      {a.message || ("value " + a.value + " vs expected " + a.expected)}
-                      <span className="muted"> · {fmtDate(a.date || a.createdAt)}</span>
+                      <strong>{a.building_name || a.building || a.buildingName}</strong> · {a.resource_type || a.resourceType} —{" "}
+                      {a.message ||
+                        ("value " + a.value + " vs expected " + (a.expected || (a.expected_range && a.expected_range.join("–"))))}
+                      <span className="muted"> · {fmtDate(a.recorded_at || a.date || a.createdAt)}</span>
                     </li>
                   ))}
                 </ul>

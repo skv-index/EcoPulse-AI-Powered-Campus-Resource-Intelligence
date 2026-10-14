@@ -8,7 +8,9 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorState from "../components/ErrorState";
 import EmptyState from "../components/EmptyState";
 
-const STATUSES = ["open", "in_progress", "resolved"];
+const STATUSES = ["open", "in_progress", "resolved", "closed"];
+
+const CATEGORIES = ["water_leak", "faulty_light", "overflowing_bin", "hvac", "other"];
 
 function toList(d) {
   if (!d) return null;
@@ -26,7 +28,8 @@ export default function Issues() {
     const f = new FormData(e.target);
     const payload = {
       title: f.get("title"),
-      building: f.get("building"),
+      building_id: f.get("building_id"),
+      category: f.get("category"),
       priority: f.get("priority") || "medium",
       description: f.get("description"),
       status: "open",
@@ -42,7 +45,7 @@ export default function Issues() {
 
   async function setStatus(id, status) {
     try {
-      await api.patch("/api/issues/" + id, { status });
+      await api.patch("/api/issues/" + id + "/status", { status });
       res.refetch();
     } catch (err) {
       alert("Status update failed: " + err.message);
@@ -71,7 +74,17 @@ export default function Issues() {
               Title <input name="title" required placeholder="e.g. Lights left on in Lab 3" />
             </label>
             <label>
-              Building <input name="building" required placeholder="e.g. Science Block" />
+              Building ID <input name="building_id" required placeholder="Paste building id (see Buildings page)" />
+            </label>
+            <label>
+              Category
+              <select name="category" defaultValue="other">
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Priority
@@ -105,9 +118,9 @@ export default function Issues() {
                       {t.status || "open"}
                     </Badge>
                   </div>
-                  <div className="muted">
-                    {t.building || t.buildingName} · {t.priority} · {fmtDate(t.createdAt || t.date)}
-                  </div>
+                    <div className="muted">
+                      {t.building_id || t.building || t.buildingName} · {t.category} · {t.priority} · {fmtDate(t.created_at || t.createdAt || t.date)}
+                    </div>
                   {t.description && <div>{t.description}</div>}
                   {!demoMode && t.id && (
                     <div className="btn-row">

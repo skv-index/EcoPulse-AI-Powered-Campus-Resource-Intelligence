@@ -11,7 +11,24 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorState from "../components/ErrorState";
 import EmptyState from "../components/EmptyState";
 
-const TYPES = ["", "electricity", "water", "gas", "waste"];
+const TYPES = ["", "electricity", "water", "waste"];
+
+const UNIT_FOR = { electricity: "kWh", water: "L", waste: "kg" };
+
+// Backend field names with fallbacks to the sample-data shape.
+function rBuilding(r) {
+  return r.building_name || r.buildingName || r.building || "";
+}
+function rBuildingId(r) {
+  return r.building_id || r.buildingId || "";
+}
+function rType(r) {
+  return r.resource_type || r.resourceType || "";
+}
+function rDate(r) {
+  const d = r.recorded_at || r.date;
+  return d ? String(d).slice(0, 10) : "";
+}
 
 function toList(d, key) {
   if (!d) return null;
@@ -28,7 +45,13 @@ export default function Analytics() {
   const bRes = useFetch(() => api.get("/api/buildings"));
   const fKey = building + "|" + resourceType + "|" + from + "|" + to;
   const rRes = useFetch(
-    () => api.get("/api/readings", { building, resourceType, from, to }),
+    () =>
+      api.get("/api/readings", {
+        building_id: building,
+        resource_type: resourceType,
+        from,
+        to,
+      }),
     [fKey]
   );
 
@@ -37,24 +60,24 @@ export default function Analytics() {
 
   let readings = toList(rRes.data, "readings") || sampleReadings;
 
-  // Client-side filter so SAMPLE + odd API shapes still respect filters
+  // Client-side filter so SAMPLE + odd API shapes still respect filters.
+  // `building` holds a building id (or, for sample data, a name).
   const filtered = useMemo(
     () =>
       readings.filter(
         (r) =>
-          (!building || r.building === building || r.buildingId === building || r.buildingName === building) &&
-          (!resourceType || r.resourceType === resourceType) &&
-          (!from || String(r.date) >= from) &&
-          (!to || String(r.date) <= to)
+          (!building || rBuildingId(r) === building || rBuilding(r) === building) &&
+          (!resourceType || rType(r) === resourceType) &&
+          (!from || rDate(r) >= from) &&
+          (!to || rDate(r) <= to)
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [readings, building, resourceType, from, to]
   );
 
   const perBuilding = useMemo(() => {
     const map = {};
     filtered.forEach((r) => {
-      const k = r.building || r.buildingName || "Unknown";
+      const k = rBuilding(r) || "Unknown";
       map[k] = (map[k] || 0) + Number(r.value || 0);
     });
     return Object.keys(map).map((building) => ({ building, total: map[building] }));
@@ -63,11 +86,16 @@ export default function Analytics() {
   async function handleAddReading(e) {
     e.preventDefault();
     const f = new FormData(e.target);
+    const bid = f.get("building_id");
+    const rtype = f.get("resource_type");
+    const chosen = buildings.find((b) => (b.id || b.name) === bid);
     const payload = {
-      building: f.get("building"),
-      resourceType: f.get("resourceType"),
+      building_id: bid,
+      building_name: (chosen && chosen.name) || "",
+      resource_type: rtype,
       value: Number(f.get("value")),
-      date: f.get("date"),
+      unit: UNIT_FOR[rtype] || "",
+      recorded_at: f.get("date") ? new Date(f.get("date")).toISOString() : undefined,
     };
     try {
       await api.post("/api/readings", payload);
@@ -99,7 +127,7 @@ export default function Analytics() {
             <select value={building} onChange={(e) => setBuilding(e.target.value)}>
               <option value="">All</option>
               {buildings.map((b) => (
-                <option key={b.id || b.name} value={b.name || b.id}>
+                <option key={b.id || b.name} value={b.id || b.name}>
                   {b.name}
                 </option>
               ))}
@@ -145,9 +173,9 @@ export default function Analytics() {
           <form className="form" onSubmit={handleAddReading}>
             <label>
               Building
-              <select name="building" required>
+              <select name="building_id" required>
                 {buildings.map((b) => (
-                  <option key={b.id || b.name} value={b.name}>
+                  <option key={b.id || b.name} value={b.id || b.name}>
                     {b.name}
                   </option>
                 ))}
@@ -155,11 +183,10 @@ export default function Analytics() {
             </label>
             <label>
               Resource
-              <select name="resourceType" required>
-                <option value="electricity">electricity</option>
-                <option value="water">water</option>
-                <option value="gas">gas</option>
-                <option value="waste">waste</option>
+              <select name="resource_type" required>
+                <option value="electricity">electricity (kWh)</option>
+                <option value="water">water (L)</option>
+                <option value="waste">waste (kg)</option>
               </select>
             </label>
             <label>
@@ -184,14 +211,14 @@ export default function Analytics() {
         ) : (
           <DataTable
             columns={[
-              { key: "date", label: "Date", render: (r) => fmtDate(r.date) },
-              { key: "building", label: "Building", render: (r) => r.building || r.buildingName },
+              { key: "date", label: "Date", render: (r) => fmtDate(rDate(r)) },
+              { key: "building", label: "Building", render: (r) => rBuilding(r) },
               {
                 key: "resourceType",
                 label: "Resource",
-                render: (r) => <Badge tone="teal">{r.resourceType}</Badge>,
+                render: (r) => <Badge tone="teal">{rType(r)}</Badge>,
               },
-              { key: "value", label: "Value", render: (r) => fmtReading(r.value, r.resourceType) },
+              { key: "value", label: "Value", render: (r) => fmtReading(r.value, rType(r)) },
             ]}
             rows={filtered}
           />

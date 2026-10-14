@@ -41,7 +41,6 @@ export default function useFetch(fetcher, deps, opts) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   return { data, loading, error, refetch, setData };

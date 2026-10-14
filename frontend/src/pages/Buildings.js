@@ -68,7 +68,7 @@ export default function Buildings() {
             Name <input name="name" required placeholder="New Academic Block" />
           </label>
           <label>
-            Code <input name="code" placeholder="NAB" />
+            Code <input name="code" required placeholder="NAB" />
           </label>
           <label>
             Floors <input name="floors" type="number" min="1" defaultValue={2} />
@@ -80,9 +80,10 @@ export default function Buildings() {
             Type
             <select name="type" defaultValue="academic">
               <option value="academic">academic</option>
-              <option value="residential">residential</option>
-              <option value="commercial">commercial</option>
+              <option value="hostel">hostel</option>
               <option value="admin">admin</option>
+              <option value="lab">lab</option>
+              <option value="canteen">canteen</option>
             </select>
           </label>
           <button className="btn" type="submit">

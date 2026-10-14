@@ -14,26 +14,49 @@ function arr(d, key) {
   return d[key] || d.items || d.data || null;
 }
 
+// cost_estimate from /api/ai/insights:
+// { breakdown: { electricity: 123, water: 45 }, total, currency, rates, note }
+function costsFromInsights(insights) {
+  const ce = insights && insights.cost_estimate;
+  if (!ce || !ce.breakdown) return null;
+  const totals = (insights && insights.totals) || {};
+  return Object.keys(ce.breakdown).map((rtype) => ({
+    resourceType: rtype,
+    usage: totals[rtype] || 0,
+    cost: ce.breakdown[rtype],
+    saving: Math.round(Number(ce.breakdown[rtype] || 0) * 0.12),
+  }));
+}
+
 export default function AIInsights() {
-  const anom = useFetch(() => api.ai.get("/api/anomalies"));
-  const fore = useFetch(() => api.ai.get("/api/forecast"));
-  const recs = useFetch(() => api.ai.get("/api/recommendations"));
-  const cost = useFetch(() => api.ai.get("/api/cost-estimate"));
+  const anom = useFetch(() => api.ai.get("/api/ai/anomalies"));
+  const fore = useFetch(() => api.ai.get("/api/ai/forecast"));
+  const recs = useFetch(() => api.ai.get("/api/ai/recommendations"));
+  const ins = useFetch(() => api.ai.get("/api/ai/insights"));
 
   const demoMode = Boolean(anom.error && fore.error && recs.error);
   const anomalies = arr(anom.data, "anomalies") || (anom.error ? sampleAnomalies : []);
-  const forecast = arr(fore.data, "forecast") || (fore.error ? sampleForecast : []);
+  const forecastRaw = arr(fore.data, "forecast") || (fore.error ? sampleForecast : []);
+  // Real forecast rows: { date, predicted_value, unit } -> chart rows { date, predicted }.
+  const forecast = forecastRaw.map((f) => ({
+    date: f.date,
+    predicted: f.predicted !== undefined ? f.predicted : f.predicted_value,
+    upper: f.upper,
+    lower: f.lower,
+  }));
   const recommendations = arr(recs.data, "recommendations") || (recs.error ? sampleRecommendations : []);
-  const costs = arr(cost.data, "estimates") || (cost.error ? sampleCostEstimates : []);
+  const costs = costsFromInsights(ins.data) || (ins.error ? sampleCostEstimates : []);
 
   const stillLoading = [anom, fore, recs].every((r) => r.loading && !r.data && !r.error);
   if (stillLoading) return <LoadingSpinner text="Asking the AI service..." />;
+
+  const forecastNote = fore.data && (fore.data.disclaimer || fore.data.message);
 
   function retryAll() {
     anom.refetch();
     fore.refetch();
     recs.refetch();
-    cost.refetch();
+    ins.refetch();
   }
 
   return (
@@ -51,6 +74,7 @@ export default function AIInsights() {
       <div className="grid cards-2">
         <div className="card">
           <h3>Demand forecast {fore.error && <Badge tone="amber">SAMPLE</Badge>}</h3>
+          {forecastNote && <p className="muted">{forecastNote}</p>}
           {forecast.length ? (
             <Chart
               kind="area"
@@ -77,9 +101,9 @@ export default function AIInsights() {
                   <Badge tone={a.severity === "high" ? "red" : a.severity === "medium" ? "amber" : "gray"}>
                     {a.severity || "info"}
                   </Badge>{" "}
-                  <strong>{a.building || a.buildingName}</strong> · {a.resourceType} —{" "}
-                  {a.message || (a.value + " vs expected " + a.expected)}
-                  <span className="muted"> · {fmtDate(a.date || a.createdAt)}</span>
+                  <strong>{a.building_name || a.building || a.buildingName}</strong> · {a.resource_type || a.resourceType} —{" "}
+                  {a.message || (a.value + " vs expected " + (a.expected || (a.expected_range && a.expected_range.join("–"))))}
+                  <span className="muted"> · {fmtDate(a.recorded_at || a.date || a.createdAt)}</span>
                 </li>
               ))}
             </ul>
@@ -99,14 +123,17 @@ export default function AIInsights() {
                     {r.priority || "info"}
                   </Badge>
                 </div>
-                <p className="muted">{r.detail}</p>
-                <p className="save">{r.impact}</p>
+                <p className="muted">{r.description || r.detail}</p>
+                <p className="save">{r.impact || (r.potential_saving_pct ? "Potential saving: " + r.potential_saving_pct + "%" : "")}</p>
               </div>
             ))}
           </div>
         </div>
         <div className="card">
-          <h3>Cost estimates {cost.error && <Badge tone="amber">SAMPLE</Badge>}</h3>
+          <h3>Cost estimates {ins.error && <Badge tone="amber">SAMPLE</Badge>}</h3>
+          {ins.data && ins.data.cost_estimate && ins.data.cost_estimate.note && (
+            <p className="muted">{ins.data.cost_estimate.note}</p>
+          )}
           <table className="table">
             <thead>
               <tr>
