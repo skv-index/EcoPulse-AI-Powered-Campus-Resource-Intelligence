@@ -1,0 +1,26 @@
+﻿/* Global reset + theme variables */
+:root {
+  --green-900: #06392e;
+  --green-700: #0d7a5f;
+  --green-600: #0f9d7a;
+  --teal-500: #0ea5a4;
+  --bg: #f2f7f4;
+  --card: #ffffff;
+  --ink: #12312a;
+  --muted: #5f7a72;
+  --line: #dce9e2;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+a { color: inherit; }
+.muted { color: var(--muted); }
+.page-title { margin: 0 0 4px; font-size: 1.6rem; }

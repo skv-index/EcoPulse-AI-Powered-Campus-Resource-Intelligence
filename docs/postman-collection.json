@@ -1,0 +1,249 @@
+{
+  "info": {
+    "name": "EcoPulse - Campus Resource Intelligence",
+    "description": "Postman collection for EcoPulse microservices.\n- resource-service: {{resourceUrl}} (default http://localhost:5001)\n- ai-service: {{aiUrl}} (default http://localhost:5002)\nAll responses use the envelope { success, data, error }.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "resourceUrl", "value": "http://localhost:5001" },
+    { "key": "aiUrl", "value": "http://localhost:5002" },
+    { "key": "buildingId", "value": "" },
+    { "key": "readingId", "value": "" },
+    { "key": "issueId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "resource-service",
+      "item": [
+        {
+          "name": "1. Resource health",
+          "request": { "method": "GET", "url": "{{resourceUrl}}/api/health" },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"status\": \"ok\", \"service\": \"resource-service\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "2. Create building",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{resourceUrl}}/api/buildings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"CSE Block\",\n  \"code\": \"CSE-BLK\",\n  \"type\": \"academic\",\n  \"floors\": 4,\n  \"area_sqft\": 25000,\n  \"department\": \"Computer Science\",\n  \"location\": \"North Campus\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "code": 201,
+              "body": "{ \"success\": true, \"data\": { \"_id\": \"<id>\", \"name\": \"CSE Block\", \"code\": \"CSE-BLK\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "3. List buildings",
+          "request": { "method": "GET", "url": "{{resourceUrl}}/api/buildings" },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": [{ \"_id\": \"<id>\", \"name\": \"CSE Block\", \"code\": \"CSE-BLK\" }], \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "4. Create reading (electricity, no recorded_at - tests server default)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{resourceUrl}}/api/readings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"building_id\": \"{{buildingId}}\",\n  \"resource_type\": \"electricity\",\n  \"value\": 342.5,\n  \"unit\": \"kWh\",\n  \"source\": \"manual\",\n  \"notes\": \"daily meter\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "code": 201,
+              "body": "{ \"success\": true, \"data\": { \"_id\": \"<id>\", \"building_id\": \"{{buildingId}}\", \"resource_type\": \"electricity\", \"value\": 342.5, \"recorded_at\": \"<server-default-now-UTC>\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "5. List readings with filters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{resourceUrl}}/api/readings?building_id={{buildingId}}&resource_type=electricity&limit=30",
+              "host": ["{{resourceUrl}}"],
+              "path": ["api", "readings"],
+              "query": [
+                { "key": "building_id", "value": "{{buildingId}}" },
+                { "key": "resource_type", "value": "electricity" },
+                { "key": "limit", "value": "30" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": [{ \"resource_type\": \"electricity\", \"value\": 342.5, \"recorded_at\": \"...\" }], \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "6. Dashboard summary",
+          "request": { "method": "GET", "url": "{{resourceUrl}}/api/dashboard/summary" },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"totals\": { \"electricity_kwh\": 12500.5, \"water_l\": 88000.0, \"waste_kg\": 1240.0 }, \"buildings_count\": 6, \"readings_count\": 540, \"open_issues\": 4 }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "7. Create issue",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{resourceUrl}}/api/issues",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"AC left on overnight - Room 204\",\n  \"description\": \"Split AC running with empty room\",\n  \"building_id\": \"{{buildingId}}\",\n  \"category\": \"electricity\",\n  \"priority\": \"medium\",\n  \"reported_by\": \"warden\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "code": 201,
+              "body": "{ \"success\": true, \"data\": { \"_id\": \"<id>\", \"title\": \"AC left on overnight - Room 204\", \"status\": \"open\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "8. Patch issue status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{resourceUrl}}/api/issues/{{issueId}}/status",
+            "body": { "mode": "raw", "raw": "{ \"status\": \"in_progress\" }" }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"_id\": \"{{issueId}}\", \"status\": \"in_progress\" }, \"error\": null }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ai-service",
+      "item": [
+        {
+          "name": "9. AI health",
+          "request": { "method": "GET", "url": "{{aiUrl}}/api/health" },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"status\": \"ok\", \"service\": \"ai-service\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "10. Anomalies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiUrl}}/api/ai/anomalies?building_id={{buildingId}}&resource_type=electricity",
+              "host": ["{{aiUrl}}"],
+              "path": ["api", "ai", "anomalies"],
+              "query": [
+                { "key": "building_id", "value": "{{buildingId}}" },
+                { "key": "resource_type", "value": "electricity" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"anomalies\": [{ \"value\": 900.0, \"expected\": 350.0, \"severity\": \"high\" }], \"method\": \"rolling-mean + stddev\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "11. Forecast",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiUrl}}/api/ai/forecast?building_id={{buildingId}}&resource_type=electricity&days=7",
+              "host": ["{{aiUrl}}"],
+              "path": ["api", "ai", "forecast"],
+              "query": [
+                { "key": "building_id", "value": "{{buildingId}}" },
+                { "key": "resource_type", "value": "electricity" },
+                { "key": "days", "value": "7" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"forecast\": [{ \"date\": \"2026-10-15\", \"predicted_value\": 360.2, \"unit\": \"kWh\" }], \"method\": \"moving-average\" }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "12. Recommendations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiUrl}}/api/ai/recommendations?building_id={{buildingId}}",
+              "host": ["{{aiUrl}}"],
+              "path": ["api", "ai", "recommendations"],
+              "query": [{ "key": "building_id", "value": "{{buildingId}}" }]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"recommendations\": [{ \"title\": \"Fix corridor lighting\", \"priority\": \"high\", \"category\": \"electricity\" }] }, \"error\": null }"
+            }
+          ]
+        },
+        {
+          "name": "13. Insights (combined view)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{aiUrl}}/api/ai/insights?building_id={{buildingId}}",
+              "host": ["{{aiUrl}}"],
+              "path": ["api", "ai", "insights"],
+              "query": [{ "key": "building_id", "value": "{{buildingId}}" }]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "code": 200,
+              "body": "{ \"success\": true, \"data\": { \"building_id\": \"{{buildingId}}\", \"anomalies_count\": 2, \"trend\": \"increasing\", \"top_recommendation\": { \"title\": \"...\", \"priority\": \"high\" } }, \"error\": null }"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
