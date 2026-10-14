@@ -1,0 +1,40 @@
+- generic [ref=f4e3]:
+  - complementary [ref=f4e4]:
+    - link "O EcoPulse Campus Resource Intelligence" [ref=f4e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f4e6]: O
+      - generic [ref=f4e7]:
+        - strong [ref=f4e8]: EcoPulse
+        - text: Campus Resource Intelligence
+    - navigation [ref=f4e9]:
+      - link "[D] Dashboard" [ref=f4e10] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f4e11]: "[D]"
+        - text: Dashboard
+      - link "[A] Analytics" [ref=f4e12] [cursor=pointer]:
+        - /url: /analytics
+        - generic [ref=f4e13]: "[A]"
+        - text: Analytics
+      - link "[B] Buildings" [ref=f4e14] [cursor=pointer]:
+        - /url: /buildings
+        - generic [ref=f4e15]: "[B]"
+        - text: Buildings
+      - link "[*] AI Insights" [ref=f4e16] [cursor=pointer]:
+        - /url: /ai-insights
+        - generic [ref=f4e17]: "[*]"
+        - text: AI Insights
+      - link "[!] Issues" [ref=f4e18] [cursor=pointer]:
+        - /url: /issues
+        - generic [ref=f4e19]: "[!]"
+        - text: Issues
+      - link "[R] Reports" [ref=f4e20] [cursor=pointer]:
+        - /url: /reports
+        - generic [ref=f4e21]: "[R]"
+        - text: Reports
+    - generic [ref=f4e22]: "API: localhost:5001 AI: localhost:5002"
+  - generic [ref=f4e25]:
+    - banner [ref=f4e26]:
+      - generic [ref=f4e27]: AI Insights
+      - generic [ref=f4e28]: Green Campus
+    - main [ref=f4e29]:
+      - paragraph [ref=f4e32]: Asking the AI service...

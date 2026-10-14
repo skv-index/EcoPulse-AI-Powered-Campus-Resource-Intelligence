@@ -1,0 +1,116 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e3]:
+    - complementary [ref=f7e4]:
+      - link "O EcoPulse Campus Resource Intelligence" [ref=f7e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f7e6]: O
+        - generic [ref=f7e7]:
+          - strong [ref=f7e8]: EcoPulse
+          - text: Campus Resource Intelligence
+      - navigation [ref=f7e9]:
+        - link "[D] Dashboard" [ref=f7e10] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f7e11]: "[D]"
+          - text: Dashboard
+        - link "[A] Analytics" [ref=f7e12] [cursor=pointer]:
+          - /url: /analytics
+          - generic [ref=f7e13]: "[A]"
+          - text: Analytics
+        - link "[B] Buildings" [ref=f7e14] [cursor=pointer]:
+          - /url: /buildings
+          - generic [ref=f7e15]: "[B]"
+          - text: Buildings
+        - link "[*] AI Insights" [ref=f7e16] [cursor=pointer]:
+          - /url: /ai-insights
+          - generic [ref=f7e17]: "[*]"
+          - text: AI Insights
+        - link "[!] Issues" [ref=f7e18] [cursor=pointer]:
+          - /url: /issues
+          - generic [ref=f7e19]: "[!]"
+          - text: Issues
+        - link "[R] Reports" [ref=f7e20] [cursor=pointer]:
+          - /url: /reports
+          - generic [ref=f7e21]: "[R]"
+          - text: Reports
+      - generic [ref=f7e22]: "API: localhost:5001 AI: localhost:5002"
+    - generic [ref=f7e25]:
+      - banner [ref=f7e26]:
+        - generic [ref=f7e27]: AI Insights
+        - generic [ref=f7e28]: Green Campus
+      - main [ref=f7e29]:
+        - generic [ref=f7e33]:
+          - heading "AI Insights" [level=1] [ref=f7e34]
+          - paragraph [ref=f7e35]: Anomaly detection, demand forecast, recommendations and cost estimates.
+          - generic [ref=f7e36]:
+            - generic [ref=f7e37]:
+              - heading "Demand forecast" [level=3] [ref=f7e38]
+              - paragraph [ref=f7e39]: Statistical projection based on past daily totals; actual usage will vary.
+              - generic [ref=f7e42]:
+                - img [ref=f7e43]:
+                  - generic [ref=f7e48]:
+                    - generic [ref=f7e49]: 2026-10-15
+                    - generic [ref=f7e51]: 2026-10-17
+                    - generic [ref=f7e53]: 2026-10-19
+                    - generic [ref=f7e55]: 2026-10-21
+                  - generic [ref=f7e58]:
+                    - generic [ref=f7e59]: "0"
+                    - generic [ref=f7e61]: "350"
+                    - generic [ref=f7e63]: "700"
+                    - generic [ref=f7e65]: "1050"
+                    - generic [ref=f7e67]: "1400"
+                - list [ref=f7e74]:
+                  - listitem [ref=f7e75]: Predicted
+                  - listitem [ref=f7e78]: Upper bound
+                  - listitem [ref=f7e81]: Lower bound
+            - generic [ref=f7e84]:
+              - heading "Anomalies (0)" [level=3] [ref=f7e85]
+              - paragraph [ref=f7e86]: All clear — no anomalies.
+          - generic [ref=f7e87]:
+            - generic [ref=f7e88]:
+              - heading "Recommendations" [level=3] [ref=f7e89]
+              - generic [ref=f7e90]:
+                - generic [ref=f7e91]:
+                  - generic [ref=f7e92]:
+                    - strong [ref=f7e93]: LED retrofit & lighting audit
+                    - generic [ref=f7e94]: high
+                  - paragraph [ref=f7e95]: Electricity usage totals 3786.87 kWh in the selected period. Swap remaining fluorescents for LEDs, add occupancy sensors in corridors, and set AC to 24-25C.
+                  - paragraph [ref=f7e96]: "Potential saving: 15%"
+                - generic [ref=f7e97]:
+                  - generic [ref=f7e98]:
+                    - strong [ref=f7e99]: Leak check & low-flow fixtures
+                    - generic [ref=f7e100]: medium
+                  - paragraph [ref=f7e101]: Water usage totals 30331.2 L. Inspect overhead tanks, taps and flush valves; fit aerators and consider rainwater harvesting.
+                  - paragraph [ref=f7e102]: "Potential saving: 12%"
+                - generic [ref=f7e103]:
+                  - generic [ref=f7e104]:
+                    - strong [ref=f7e105]: Waste segregation drive
+                    - generic [ref=f7e106]: low
+                  - paragraph [ref=f7e107]: Waste totals 428.84 kg in the selected period. Place colour-coded bins, compost food waste, and run a weekly hostel segregation audit.
+                  - paragraph [ref=f7e108]: "Potential saving: 25%"
+            - generic [ref=f7e109]:
+              - heading "Cost estimates" [level=3] [ref=f7e110]
+              - paragraph [ref=f7e111]: Estimates use standard campus rates (electricity Rs 8/kWh, water Rs 0.06/L, waste Rs 2/kg). Actual tariffs may vary.
+              - table [ref=f7e112]:
+                - rowgroup [ref=f7e113]:
+                  - row [ref=f7e114]:
+                    - columnheader "Resource" [ref=f7e115]
+                    - columnheader "Usage" [ref=f7e116]
+                    - columnheader "Cost (Rs.)" [ref=f7e117]
+                    - columnheader "Potential saving" [ref=f7e118]
+                - rowgroup [ref=f7e119]:
+                  - row [ref=f7e120]:
+                    - cell "electricity" [ref=f7e121]
+                    - cell "3,786.9" [ref=f7e122]
+                    - cell "Rs.30,295" [ref=f7e123]
+                    - cell "Rs.3,635" [ref=f7e124]
+                  - row [ref=f7e125]:
+                    - cell "waste" [ref=f7e126]
+                    - cell "428.8" [ref=f7e127]
+                    - cell "Rs.858" [ref=f7e128]
+                    - cell "Rs.103" [ref=f7e129]
+                  - row [ref=f7e130]:
+                    - cell "water" [ref=f7e131]
+                    - cell "30,331.2" [ref=f7e132]
+                    - cell "Rs.1,820" [ref=f7e133]
+                    - cell "Rs.218" [ref=f7e134]
+  - generic [aria-hidden] [ref=f7e135]: "0"

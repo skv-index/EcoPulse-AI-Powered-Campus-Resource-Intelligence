@@ -3,6 +3,41 @@
 Sustainability dashboard for campus resource tracking (electricity, water, waste)
 with anomaly detection, forecasting, and recommendations.
 
+## App showcase (live screenshots, real Atlas data)
+
+### 1. Dashboard — campus overview
+Live KPI cards (electricity kWh, water, buildings tracked, open issues + AI anomaly count),
+per-building consumption chart for the last 30 days, anomaly alerts and an issues snapshot —
+all served by `GET /api/dashboard/summary`.
+![Dashboard](docs/screenshots/01-dashboard.png)
+
+### 2. Analytics — consumption explorer
+Filter 60 real readings by building, resource type and date range; per-building comparison
+bar chart; add-reading form that POSTs to `/api/readings` and immediately refreshes the table.
+![Analytics](docs/screenshots/02-analytics.png)
+
+### 3. Buildings — campus inventory
+CRUD for the 5 seeded buildings (CSE Block, ECE Block, Boys Hostel, Admin Block,
+Central Library) via `/api/buildings`. Types are validated by the API.
+![Buildings](docs/screenshots/03-buildings.png)
+
+### 4. AI Insights — anomaly detection, forecast, recommendations, costs
+The stateless ai-service pulls readings over HTTP from the resource-service and runs
+z-score anomaly detection + LinearRegression forecasting (pandas/NumPy/scikit-learn, no LLM
+key needed). Cost estimates use fixed campus rates (₹8/kWh, ₹0.06/L, ₹2/kg).
+![AI Insights](docs/screenshots/04-ai-insights.png)
+
+### 5. Issues — maintenance tracker
+Report leaks, faulty lights and overflowing bins (`POST /api/issues` with category +
+priority) and move them through `open → in_progress → resolved → closed` via
+`PATCH /api/issues/<id>/status`.
+![Issues](docs/screenshots/05-issues.png)
+
+### 6. Reports — sustainability score & savings
+Estimated sustainability score (85/100 on current data), monthly spend vs savings
+opportunities per resource, derived from live summary + AI cost estimates.
+![Reports](docs/screenshots/06-reports.png)
+
 ## Architecture (Module 1 — Shared Contracts + Scaffolding)
 
 ```
