@@ -21,9 +21,15 @@ def summary():
     readings = list(readings_col().find())
     issues = list(issues_col().find())
 
+    def _aware(dt):
+        # pymongo returns naive UTC datetimes; memory store keeps aware ones.
+        if isinstance(dt, datetime) and dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+
     recent = [r for r in readings
               if isinstance(r.get("recorded_at"), datetime)
-              and r["recorded_at"] >= cutoff]
+              and _aware(r["recorded_at"]) >= cutoff]
 
     # 1) Totals by resource_type over the last 30 days.
     totals_30d = {"electricity": 0, "water": 0, "waste": 0}
