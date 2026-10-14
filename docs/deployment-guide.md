@@ -16,14 +16,19 @@
 |-----|-------|
 | `MONGO_URI` | `mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/?retryWrites=true&w=majority` |
 | `DB_NAME` | `ecopulse_resource` |
-| `PORT` | `5001` (or Render-injected `$PORT` — code must honor `$PORT`) |
+
+> ⚠️ Do NOT set `PORT` on Render — Render injects its own `PORT` and the
+> start command (`gunicorn wsgi:app --bind 0.0.0.0:$PORT`) already uses it.
+> Hardcoding `PORT=5001` makes gunicorn bind the wrong port and the service
+> returns 502. (`PORT=5001`/`5002` belong only in local `.env` files.)
 
 ### ai-service (Render)
 
 | Var | Value |
 |-----|-------|
 | `RESOURCE_SERVICE_URL` | `https://<resource-service>.onrender.com` (no trailing slash) |
-| `PORT` | `5002` (or Render-injected `$PORT`) |
+
+(Same `PORT` rule: do not set it on Render.)
 
 ### frontend (Vercel/Netlify)
 
