@@ -4,8 +4,8 @@
 
 | Component | Host | Build / start |
 |-----------|------|---------------|
-| resource-service | Render (Web Service, Python) | build `pip install -r requirements.txt`; start `gunicorn app.app:app --bind 0.0.0.0:$PORT` (cwd `services/resource-service`) |
-| ai-service | Render (Web Service, Python) | same pattern (cwd `services/ai-service`) |
+| resource-service | Render (Web Service, Python) | build `pip install -r requirements.txt`; start `gunicorn app:app --bind 0.0.0.0:$PORT` (Root Directory `services/resource-service`) |
+| ai-service | Render (Web Service, Python) | build `pip install -r requirements.txt`; start `gunicorn run:app --bind 0.0.0.0:$PORT` (Root Directory `services/ai-service`) |
 | frontend | Vercel or Netlify | build `npm run build` (cwd `frontend`); output `build/` |
 
 ## Env tables (set in host dashboards, never commit)
